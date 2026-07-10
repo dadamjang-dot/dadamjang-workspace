@@ -1,4 +1,4 @@
-# Dadamjang Workspace
+# DADAMJANG Workspace
 
 다담장 커머스 플랫폼의 통합 작업 공간입니다.
 
