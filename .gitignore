@@ -1,0 +1,13 @@
+.DS_Store
+.codex-fable5/
+.workflow/
+.vscode/
+*.log
+
+.env
+.env.*
+!.env.example
+
+node_modules/
+dist/
+coverage/
