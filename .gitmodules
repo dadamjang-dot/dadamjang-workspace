@@ -1,9 +1,12 @@
 [submodule "dadamjang-fe"]
 	path = dadamjang-fe
 	url = https://github.com/dadamjang-dot/dadamjang-fe.git
+	ignore = untracked
 [submodule "dadamjang-be"]
 	path = dadamjang-be
 	url = https://github.com/dadamjang-dot/dadamjang-be.git
+	ignore = untracked
 [submodule "dadamjang-infra"]
 	path = dadamjang-infra
 	url = https://github.com/dadamjang-dot/dadamjang-infra.git
+	ignore = untracked
