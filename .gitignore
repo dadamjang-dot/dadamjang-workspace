@@ -9,10 +9,8 @@
 !.env.example
 
 node_modules/
+node_modules.nosync
 dist/
 coverage/
 
 docs
-
-# iCloud sync exclusions
-node_modules
