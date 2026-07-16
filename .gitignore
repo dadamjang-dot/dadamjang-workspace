@@ -13,3 +13,6 @@ dist/
 coverage/
 
 docs
+
+# iCloud sync exclusions
+node_modules
