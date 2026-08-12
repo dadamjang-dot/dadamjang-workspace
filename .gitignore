@@ -1,6 +1,7 @@
 .DS_Store
 .codex-fable5/
 .workflow/
+.omo
 .vscode/
 *.log
 
