@@ -3,6 +3,8 @@
 .workflow/
 .omo
 .vscode/
+.worktrees/
+.superpowers/
 *.log
 
 .env
