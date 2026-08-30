@@ -5,6 +5,7 @@
 .vscode/
 .worktrees/
 .superpowers/
+_workspace/
 *.log
 
 .env
