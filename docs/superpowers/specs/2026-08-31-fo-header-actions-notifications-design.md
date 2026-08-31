@@ -32,6 +32,8 @@ BO의 주문 상태 변경 화면은 유지한다. Partner는 기존 상품 편�
 
 현재 `dadamjang-fe`의 `ProductLayout`과 `ActionButton`을 그대로 사용한다. 별도의 헤더 액션 추상화는 만들지 않는다.
 
+사용자가 지정한 `a5c9073b433051088423626d67b84cadc797fd5a` 기준에서는 액션 버튼 관련 설정만 선별해 적용한다. 커밋 전체를 cherry-pick하거나 인증, 설정, CI 등 무관한 변경을 가져오지 않는다. 현재 워크스페이스에 공용 버튼 구현이 이미 있으므로 공용 컴포넌트는 수정하지 않고 각 FO 탭의 액션 정의와 목적지 연결만 바꾼다.
+
 | 탭 | 레이아웃 | 액션 | 형태 |
 | --- | --- | --- | --- |
 | 홈 | `ProductLayout` | 알림, 장바구니 | 캡슐 |
@@ -75,7 +77,7 @@ DB 알림함과 트랜잭션 Outbox를 사용한다. 도메인 변경과 알림 
 - `disabledAt`, `disabledReason`, `lastSeenAt`
 - 생성·수정 시각
 
-`installationId`는 새 식별자를 만들지 않고 현재 인증 세션이 이미 사용하는 안정적인 device ID를 재사용한다. `installationId`와 `expoPushToken`은 각각 고유하다. 로그인한 사용자가 바뀌면 같은 설치의 소유자를 원자적으로 갱신한다. 로그아웃과 탈퇴는 해당 설치의 토큰을 비활성화한다.
+`installationId`는 새 식별자를 만들지 않고 현재 인증 세션이 이미 사용하는 안정적인 device ID를 재사용한다. `installationId`와 `expoPushToken`은 각각 고유하다. 로그인한 사용자가 바뀌면 같은 설치의 소유자를 원자적으로 갱신한다. 로그아웃과 탈퇴는 해당 설치의 토큰을 비활성화하고 아직 완료되지 않은 Outbox 행을 종료한다. `DeviceNotRegistered`로 비활성화된 같은 토큰은 재등록으로 되살리지 않으며, 해당 설치가 새 토큰을 받은 경우에만 다시 활성화한다.
 
 ### `notificationPreferences`
 
@@ -121,6 +123,8 @@ DB 알림함과 트랜잭션 Outbox를 사용한다. 도메인 변경과 알림 
 - `CANCELLED`: 주문 취소
 
 초기 `PAYMENT_PENDING` 생성은 알리지 않는다. 알림의 대상 경로는 주문 상세다.
+
+현재 코드에는 결제 모듈, 서명된 결제 콜백, 또는 production `PAYMENT_PENDING -> PAID` writer가 없다. 관리자 전이 규칙도 이 변경을 의도적으로 금지한다. 따라서 이번 구현은 `PAID` copy와 dedupe 생성을 지원하되, 실제 `PAID` producer는 결제 공급자와 서명 검증 계약이 정해질 때까지 외부 의존성으로 남긴다. 결제 확인용 GraphQL/admin 우회 mutation은 만들지 않는다. 현재 실제 writer가 있는 `FULFILLING`, `COMPLETED`, `FAILED`, `CANCELLED`는 모두 같은 트랜잭션에서 알림을 생성한다.
 
 ### 위시 상품
 
@@ -205,6 +209,8 @@ GraphQL 계약은 `foNotificationPreferences`, `updateFoNotificationPreferences`
 
 ## 탈퇴와 복구
 
+이 수명주기는 역할이 `USER`인 FO 계정에만 적용한다. 사업자 상품·정산 보존 정책이 필요한 `PARTNER` 계정 탈퇴는 이번 범위에 포함하지 않으며, FO 설정에서도 파트너에게 회원 탈퇴 항목을 노출하지 않는다.
+
 진행 중인 주문이 `PAYMENT_PENDING`, `PAID`, `FULFILLING` 중 하나면 탈퇴 요청을 거부하고 주문 완료 또는 취소를 안내한다.
 
 탈퇴 확인 시 다음 변경을 한 트랜잭션에서 수행한다.
@@ -247,7 +253,7 @@ GraphQL 계약은 `foNotificationPreferences`, `updateFoNotificationPreferences`
 - nullable 비밀번호와 사용자 수명주기 migration smoke test
 - 카카오 가입이 `NULL` 비밀번호를 저장하고 이메일 가입이 bcrypt 해시를 저장하는 테스트
 - 비밀번호 없는 로그인과 재설정 요청의 계정 열거 방지 테스트
-- 주문 상태별 알림 생성과 중복 방지 통합 테스트
+- 현재 production writer가 있는 주문 상태별 알림 생성과 중복 방지 통합 테스트, `PAID` copy/dedupe 규칙 테스트
 - 위시 가격 인하·재입고 경계 테스트
 - 스타일 자기 좋아요 제외와 중복 방지 테스트
 - Outbox claim, 재시도, ticket, receipt, `DeviceNotRegistered` 테스트
@@ -276,7 +282,7 @@ GraphQL 계약은 `foNotificationPreferences`, `updateFoNotificationPreferences`
 - Backend typecheck, lint, unit, integration, migration smoke
 - FO typecheck, lint, unit, integration, native action tests
 - Partner typecheck, lint, FSD, unit, build
-- 실행 중인 Metro를 재사용해 iPhone 17 Pro 시뮬레이터에서 권한, 실제 Expo Push 수신, 알림 선택 딥링크 확인
+- 실행 중인 Metro를 재사용해 iPhone 17 Pro 시뮬레이터에서 권한, 실제 `PAID -> FULFILLING` Expo Push 수신, 알림 선택 딥링크 확인
 - Codex 내장 브라우저의 시뮬레이터 미러에서 탭별 헤더 액션과 목적지 확인
 
 실제 Expo Push 완료 기준은 Expo ticket 성공만이 아니라 receipt 성공까지다. credential이 없으면 가짜 성공으로 대체하지 않고 외부 구성 누락으로 명시한다.
