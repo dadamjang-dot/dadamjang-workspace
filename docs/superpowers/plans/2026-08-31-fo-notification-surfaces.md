@@ -166,7 +166,6 @@ export interface ShopMenuSheetProps {
   isError: boolean;
   isLoading: boolean;
   selectedCategoryId?: string;
-  onOpenComparison: () => void;
   onRetry: () => void;
   onSelectCategory: (categoryId?: string) => void;
 }
@@ -174,14 +173,12 @@ export interface ShopMenuSheetProps {
 
 - [ ] **Step 1: Write failing sheet tests**
 
-Assert loading, retryable error, all-category option, every category level ordered by `sortOrder`, current selection, category selection, and compare navigation. Selection must apply `{ categoryId, categoryIds: [], categorySource }` to the existing provider and close the sheet; compare must replace the sheet with `/compare`.
+Assert loading, retryable error, all-category option, every category level ordered by `sortOrder`, current selection, and category selection. Selection must apply `{ categoryId, categoryIds: [], categorySource }` to the existing provider and close the sheet.
 
 ```typescript
 fireEvent.press(screen.getByText("전체"));
 expect(updateFilters).toHaveBeenCalledWith({ categoryId: undefined, categoryIds: [], categorySource: undefined });
 expect(router.back).toHaveBeenCalled();
-fireEvent.press(screen.getByText("비교함"));
-expect(router.replace).toHaveBeenCalledWith("/compare");
 ```
 
 - [ ] **Step 2: Run the test and observe RED**
@@ -199,7 +196,6 @@ const selectCategory = (categoryId?: string) => {
   updateFilters({ categoryId, categoryIds: [], categorySource: categoryId ? "navigation" : undefined });
   router.back();
 };
-const openComparison = () => router.replace("/compare");
 ```
 
 - [ ] **Step 4: Re-run and commit**
@@ -559,7 +555,7 @@ Invoke `build-ios-apps:ios-debugger-agent`: list simulators and select the boote
 
 - [ ] **Step 3: Verify screens through the Codex simulator browser**
 
-Use `build-ios-apps:ios-simulator-browser` and the existing `http://localhost:3200/` mirror. Check every header matrix row, auth return, shopping menu category/compare behavior, notification inbox states, settings visibility, password warning, and deactivation/reactivation confirmation. Capture evidence only after the UI is stable.
+Use `build-ios-apps:ios-simulator-browser` and the existing `http://localhost:3200/` mirror. Check every header matrix row, auth return, shopping menu category behavior, notification inbox states, settings visibility, password warning, and deactivation/reactivation confirmation. Capture evidence only after the UI is stable.
 
 - [ ] **Step 4: Verify actual Expo Push end to end**
 

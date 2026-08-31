@@ -176,7 +176,6 @@ GraphQL 계약은 `foNotifications`, `markFoNotificationRead`, `markAllFoNotific
 쇼핑의 첫 액션은 카테고리 전체 메뉴 시트를 연다. 기존 카테고리 쿼리와 스타일을 재사용한다.
 
 - 카테고리 선택: 쇼핑의 `categoryId` 필터를 적용하고 시트 닫기
-- 비교함 선택: 기존 비교함 경로로 이동
 
 이 시트는 전역 앱 메뉴가 아니다.
 
@@ -266,7 +265,7 @@ GraphQL 계약은 `foNotificationPreferences`, `updateFoNotificationPreferences`
 - `ProductLayout`이 홈, 스타일, 쇼핑에만 적용되는 회귀 테스트
 - 비밀번호 찾기 Alert의 취소와 계속 테스트
 - 알림 목록, 개별·전체 읽음, 딥링크 fallback 테스트
-- 쇼핑 메뉴 카테고리 적용과 비교함 이동 테스트
+- 쇼핑 메뉴 카테고리 적용 테스트
 - Push 권한, 토큰 등록, 설정 토글 테스트
 - 카카오 전용 계정에서 비밀번호 설정 항목이 숨겨지는 테스트
 - 탈퇴와 재활성화 화면 테스트
