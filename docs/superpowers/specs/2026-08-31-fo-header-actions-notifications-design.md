@@ -13,6 +13,7 @@ FO의 기존 헤더 액션 UI를 재사용해 탭별 액션을 정확한 화면�
 - 주문 상태, 위시 상품, 스타일 좋아요 알림 생성
 - 쇼핑 카테고리 전체 메뉴 시트
 - 푸시 설정과 계정 설정
+- Partner 게시 상품의 가격·재고 수정 경로
 - 카카오 전용 계정의 nullable 비밀번호 모델
 - 비밀번호 찾기 진입 경고
 - 30일 탈퇴 유예, 복구, 익명화
@@ -20,12 +21,12 @@ FO의 기존 헤더 액션 UI를 재사용해 탭별 액션을 정확한 화면�
 ### 제외
 
 - 쿠폰, 프로모션, 배송 추적 알림
-- BO 또는 Partner 화면 변경
+- BO 화면 변경
 - 새로운 헤더 컴포넌트나 디자인 시스템
 - 알림 마케팅 캠페인 도구
 - APNs 직접 발송 경로
 
-BO의 주문 상태 변경과 Partner의 상품 수정은 기존 화면을 유지한다. 해당 백엔드 쓰기 흐름이 알림 생성 지점이 된다.
+BO의 주문 상태 변경 화면은 유지한다. Partner는 기존 상품 편집기를 재사용하되 게시 상품에서는 가격·재고만 수정할 수 있고, 해당 백엔드 쓰기 흐름이 위시 알림 생성 지점이 된다.
 
 ## 기존 UI 재사용
 
@@ -129,6 +130,10 @@ DB 알림함과 트랜잭션 Outbox를 사용한다. 도메인 변경과 알림 
 - 총 재고가 0에서 양수로 바뀌면 재입고 알림
 
 해당 상품을 위시한 사용자마다 앱 내 알림을 생성한다. 같은 상품 수정에서 가격 인하와 재입고가 동시에 발생하면 두 알림을 각각 생성한다. 대상 경로는 상품 상세다.
+
+현재 `updatePartnerProductDraft`는 게시 상품을 수정할 수 없으므로 `updatePublishedProductSkus(productId, skus)` mutation을 추가한다. 서비스는 소유한 `PUBLISHED/APPROVED` 상품을 잠그고 기존 활성 SKU의 최저가와 총 재고를 읽은 뒤 SKU 가격·재고만 갱신한다. SKU 코드, 옵션, 상품명, 설명, 이미지, 카테고리는 이 mutation으로 바꿀 수 없다. 변경 전후를 비교해 알림과 Outbox를 같은 트랜잭션에 저장한다.
+
+Partner 편집 화면은 게시 상품일 때 상품 정보 필드를 읽기 전용으로 만들고 SKU 가격·재고만 활성화한다. 저장은 `updatePublishedProductSkus`를 호출하며 기존 draft 저장이나 승인 절차를 우회하지 않는다.
 
 ### 스타일 좋아요
 
@@ -260,10 +265,17 @@ GraphQL 계약은 `foNotificationPreferences`, `updateFoNotificationPreferences`
 - 카카오 전용 계정에서 비밀번호 설정 항목이 숨겨지는 테스트
 - 탈퇴와 재활성화 화면 테스트
 
+### Partner
+
+- 게시 상품에서 상품 정보·SKU 식별 필드가 읽기 전용인지 확인
+- 게시 상품 가격·재고 저장이 `updatePublishedProductSkus`만 호출하는지 확인
+- draft 상품이 계속 `updatePartnerProductDraft`를 사용하는 회귀 테스트
+
 ### 실행 검증
 
 - Backend typecheck, lint, unit, integration, migration smoke
 - FO typecheck, lint, unit, integration, native action tests
+- Partner typecheck, lint, FSD, unit, build
 - 실행 중인 Metro를 재사용해 iPhone 17 Pro 시뮬레이터에서 권한, 실제 Expo Push 수신, 알림 선택 딥링크 확인
 - Codex 내장 브라우저의 시뮬레이터 미러에서 탭별 헤더 액션과 목적지 확인
 
