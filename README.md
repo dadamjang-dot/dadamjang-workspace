@@ -1,42 +1,70 @@
-# dadamjang workspace
+# 다담장
 
-다담장 커머스 플랫폼의 통합 작업 공간입니다.
+상품을 발견하고 저장하는 구매자 앱부터 파트너 상품 운영, 관리자 심사까지 하나의 흐름으로 구현한 커머스 포트폴리오 프로젝트입니다.
 
-## 구성
+## 서비스 구성
 
-- `dadamjang-fe`: 구매자 FO Expo 앱, 파트너/어드민 웹 앱을 위한 프론트엔드 저장소
-- `dadamjang-be`: NestJS GraphQL API와 커머스 도메인 저장소
-- `dadamjang-infra`: 로컬 개발 의존성, staging AWS 인프라, CI/CD 저장소
+| 영역 | 사용자 | 주요 기능 |
+| --- | --- | --- |
+| FO | 구매자 | 상품 탐색·검색, 위시, 장바구니, 주문, 스타일 콘텐츠, 알림 |
+| Partner | 입점 파트너 | 상품 등록·수정, 이미지와 SKU 관리, 심사 요청과 판매 상태 확인 |
+| BO | 운영 관리자 | 파트너·상품 심사, 주문·카테고리·관리자·감사 로그 관리 |
 
-## 클론
+```mermaid
+flowchart LR
+  FO[Expo 앱] --> API[NestJS GraphQL API]
+  Partner[Partner 웹] --> API
+  BO[Back Office 웹] --> API
+  API --> DB[(PostgreSQL)]
+  API --> R2[Cloudflare R2]
+  Infra[Terraform / GitHub Actions] -. 배포 구성 .-> API
+```
+
+## 저장소
+
+| 저장소 | 내용 |
+| --- | --- |
+| [`dadamjang-fe`](./dadamjang-fe) | Expo 구매자 앱과 Next.js Partner·BO 앱 |
+| [`dadamjang-be`](./dadamjang-be) | NestJS GraphQL API와 커머스 도메인 |
+| [`dadamjang-infra`](./dadamjang-infra) | 로컬 개발 환경과 AWS·Cloudflare 인프라 정의 |
+
+각 디렉터리는 독립 저장소를 연결한 Git submodule입니다.
+
+## 기술적 초점
+
+- 세 클라이언트가 하나의 GraphQL 계약을 사용합니다.
+- Checkout 중복 요청을 idempotency key와 PostgreSQL transaction으로 제어합니다.
+- 메일·푸시 전송은 outbox worker로 요청 처리와 분리합니다.
+- 업로드 이미지는 비공개 pending bucket에서 검증한 뒤 공개 영역으로 승격합니다.
+- 모바일 UI는 iOS와 Android의 네이티브 표현을 각각 사용합니다.
+- Terraform과 OIDC 기반 GitHub Actions로 staging·e2e 인프라와 배포 흐름을 정의합니다.
+
+## 로컬 실행
 
 ```bash
 git clone --recurse-submodules https://github.com/dadamjang-dot/dadamjang-workspace.git
 cd dadamjang-workspace
+
+cd dadamjang-be
+cp .env.example .env
+pnpm install
+pnpm db:up
+pnpm migrate
+pnpm start:dev
 ```
 
-이미 클론했다면 submodule을 초기화합니다.
+다른 터미널에서 프런트엔드를 실행합니다.
 
 ```bash
-git submodule update --init --recursive
+cd dadamjang-fe
+pnpm install
+cp apps/dadamjang-fo/.env.example apps/dadamjang-fo/.env
+pnpm --dir apps/dadamjang-fo start
 ```
 
-submodule을 최신 원격 커밋으로 맞춥니다.
+Partner와 BO는 각각 `pnpm partner:dev`, `pnpm bo:dev`로 실행합니다.
 
-```bash
-git submodule update --remote --merge
-```
+## 구현 범위
 
-## 작업 순서
-
-1. `dadamjang-infra`에서 로컬 DB/Redis/Mailpit을 실행합니다.
-2. `dadamjang-be`에서 migration 후 API를 실행합니다.
-3. `dadamjang-fe/apps/dadamjang-fo`에서 Expo 앱을 실행합니다.
-
-## 원칙
-
-- 각 submodule은 독립 repo입니다.
-- 기능 변경은 해당 submodule에서 먼저 커밋/푸시합니다.
-- workspace는 검증된 submodule SHA만 갱신합니다.
-- GraphQL 계약은 `dadamjang-be`가 기준입니다.
-- 비밀값은 `.env`, GitHub Secrets, AWS Secrets Manager에만 둡니다.
+- 주문은 결제 연동 전 단계인 mock checkout이며 실제 결제와 재고 차감은 포함하지 않습니다.
+- Terraform 검증과 staging plan은 자동화되어 있지만 apply 경로는 저장소에 포함하지 않았습니다.
