@@ -5,7 +5,8 @@
 ## 기준과 환경
 
 - 기준 SHA: workspace `450f54f9e766a6cc9e6f1ac8438149d258f9a721`, BE `d8e581bebc69d3ec9df757a921abfd789e1f1ec9`, FE `9003ceed30b2c9c874d45508984637ff040a845a`
-- 검증 SHA: BE `4d348febe8a4a2f3926e3030c4d4fd9a7166592b`, FE `e4bf3bcfaa9a7df3030abc214bc6d66e4153aa66`
+- 검증 브랜치 SHA: BE `4d348febe8a4a2f3926e3030c4d4fd9a7166592b`, FE `e4bf3bcfaa9a7df3030abc214bc6d66e4153aa66`
+- develop squash SHA: BE `14be7595f21f2183e8427b714182528fd32c07d3`, FE `bc6e96c65d103f30e009fe4074e370b71665b8b5`
 - 환경: macOS Darwin 25.4.0 arm64, Node.js 22.13.0, pnpm 11.20.0, Docker 29.6.1, PostgreSQL 격리 테스트 컨테이너 `dadamjang_test:55432`
 - 데이터: `src/database/fixtures.ts`의 합성 사용자·상품과 매 시나리오 초기화된 테스트 DB만 사용
 - 상대 순서는 `t0`, `t1`, `t2`로 기록했다. 동시성 시나리오는 wall-clock sleep 대신 deferred promise와 PostgreSQL lock latch를 사용했다.
